@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Knowledge Summarizer Agent - Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            width: 1200px;
+            height: 700px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+            position: relative;
+        }
+
+        .title {
+            font-size: 32px;
+            font-weight: 800;
+            color: #1a202c;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .workflow {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            height: 500px;
+            position: relative;
+        }
+
+        .step {
+            width: 200px;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.6s forwards;
+        }
+
+        .step:nth-child(1) { animation-delay: 0s; }
+        .step:nth-child(2) { animation-delay: 2s; }
+        .step:nth-child(3) { animation-delay: 5s; }
+        .step:nth-child(4) { animation-delay: 8s; }
+        .step:nth-child(5) { animation-delay: 11s; }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .step-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            margin: 0 auto 15px;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .step-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #2d3748;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .step-desc {
+            font-size: 12px;
+            color: #718096;
+            text-align: center;
+            line-height: 1.5;
+        }
+
+        .arrow {
+            position: absolute;
+            top: 40px;
+            width: 100px;
+            height: 2px;
+            background: #cbd5e0;
+            opacity: 0;
+        }
+
+        .arrow::after {
+            content: '→';
+            position: absolute;
+            right: -10px;
+            top: -12px;
+            font-size: 20px;
+            color: #cbd5e0;
+        }
+
+        .arrow1 { left: 220px; animation: fadeIn 0.5s forwards 2.5s; }
+        .arrow2 { left: 440px; animation: fadeIn 0.5s forwards 5.5s; }
+        .arrow3 { left: 660px; animation: fadeIn 0.5s forwards 8.5s; }
+        .arrow4 { left: 880px; animation: fadeIn 0.5s forwards 11.5s; }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        .slack-message {
+            position: absolute;
+            top: 200px;
+            left: 40px;
+            background: #f7fafc;
+            padding: 15px 20px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+            font-size: 14px;
+            color: #2d3748;
+            opacity: 0;
+            animation: fadeIn 0.5s forwards 0.5s;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .sources {
+            position: absolute;
+            top: 250px;
+            left: 260px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .source-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 15px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            opacity: 0;
+        }
+
+        .source-item:nth-child(1) { animation: fadeInLeft 0.4s forwards 2.5s; }
+        .source-item:nth-child(2) { animation: fadeInLeft 0.4s forwards 3s; }
+        .source-item:nth-child(3) { animation: fadeInLeft 0.4s forwards 3.5s; }
+
+        @keyframes fadeInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .source-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .slack-icon { background: #E01E5A; }
+        .notion-icon { background: #000000; }
+        .drive-icon { background: #4285F4; }
+
+        .chunks {
+            position: absolute;
+            top: 250px;
+            left: 480px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        .chunk-box {
+            width: 80px;
+            height: 50px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-radius: 8px;
+            opacity: 0;
+            animation: popIn 0.3s forwards;
+        }
+
+        .chunk-box:nth-child(1) { animation-delay: 5.5s; }
+        .chunk-box:nth-child(2) { animation-delay: 5.8s; }
+        .chunk-box:nth-child(3) { animation-delay: 6.1s; }
+        .chunk-box:nth-child(4) { animation-delay: 6.4s; }
+        .chunk-box:nth-child(5) { animation-delay: 6.7s; }
+
+        @keyframes popIn {
+            0% {
+                opacity: 0;
+                transform: scale(0);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .summary-box {
+            position: absolute;
+            top: 220px;
+            left: 700px;
+            width: 200px;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            color: white;
+            font-size: 13px;
+            line-height: 1.6;
+            opacity: 0;
+            animation: fadeIn 0.5s forwards 9s;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .response {
+            position: absolute;
+            top: 200px;
+            left: 920px;
+            width: 220px;
+            background: #f7fafc;
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 4px solid #48bb78;
+            opacity: 0;
+            animation: fadeIn 0.5s forwards 12s;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .response-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .response-text {
+            font-size: 12px;
+            color: #4a5568;
+            line-height: 1.5;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 4px 8px;
+            background: #48bb78;
+            color: white;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        .footer {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 12px;
+            color: #718096;
+            opacity: 0;
+            animation: fadeIn 0.5s forwards 13s;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="title">🤖 Knowledge Summarizer Agent</div>
+        
+        <div class="workflow">
+            <!-- Step 1: User Query -->
+            <div class="step">
+                <div class="step-icon">💬</div>
+                <div class="step-title">User Query</div>
+                <div class="step-desc">Slack command /summarize</div>
+            </div>
+
+            <!-- Step 2: Multi-Source Search -->
+            <div class="step">
+                <div class="step-icon">🔍</div>
+                <div class="step-title">Search Sources</div>
+                <div class="step-desc">Slack, Notion, Drive</div>
+            </div>
+
+            <!-- Step 3: Vector Retrieval -->
+            <div class="step">
+                <div class="step-icon">📊</div>
+                <div class="step-title">Vector Search</div>
+                <div class="step-desc">Top 5 chunks from Pinecone</div>
+            </div>
+
+            <!-- Step 4: AI Summary -->
+            <div class="step">
+                <div class="step-icon">🤖</div>
+                <div class="step-title">Claude AI</div>
+                <div class="step-desc">Generate summary</div>
+            </div>
+
+            <!-- Step 5: Response -->
+            <div class="step">
+                <div class="step-icon">✅</div>
+                <div class="step-title">Response</div>
+                <div class="step-desc">Formatted answer</div>
+            </div>
+
+            <!-- Arrows -->
+            <div class="arrow arrow1"></div>
+            <div class="arrow arrow2"></div>
+            <div class="arrow arrow3"></div>
+            <div class="arrow arrow4"></div>
+        </div>
+
+        <!-- Slack Message -->
+        <div class="slack-message">
+            <strong>/summarize</strong> how to onboard clients?
+        </div>
+
+        <!-- Sources -->
+        <div class="sources">
+            <div class="source-item">
+                <div class="source-icon slack-icon">💬</div>
+                <span style="font-size: 12px; color: #2d3748;">Slack #jerome</span>
+            </div>
+            <div class="source-item">
+                <div class="source-icon notion-icon">📄</div>
+                <span style="font-size: 12px; color: #2d3748;">Notion Wiki</span>
+            </div>
+            <div class="source-item">
+                <div class="source-icon drive-icon">📁</div>
+                <span style="font-size: 12px; color: #2d3748;">Drive Docs</span>
+            </div>
+        </div>
+
+        <!-- Chunks -->
+        <div class="chunks">
+            <div class="chunk-box"></div>
+            <div class="chunk-box"></div>
+            <div class="chunk-box"></div>
+            <div class="chunk-box"></div>
+            <div class="chunk-box"></div>
+        </div>
+
+        <!-- Summary -->
+        <div class="summary-box">
+            Analyzing context from 5 sources...
+            <br><br>
+            Generating concise summary with Claude Haiku
+        </div>
+
+        <!-- Response -->
+        <div class="response">
+            <div class="response-title">📚 Answer Ready</div>
+            <div class="response-text">
+                1. Schedule discovery call<br>
+                2. Complete intake form<br>
+                3. Set up workspace<br>
+                4. Assign account manager
+            </div>
+            <span class="tag">< 3 seconds</span>
+        </div>
+
+        <div class="footer">
+            💰 Cost: ~$20-55/month | ⚡ 50-60% faster retrieval | 🔒 POPIA compliant
+        </div>
+    </div>
+
+    <script>
+        // Auto-reload after 15 seconds for continuous demo
+        setTimeout(() => {
+            location.reload();
+        }, 15000);
+    </script>
+</body>
+</html>
